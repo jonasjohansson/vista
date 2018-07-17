@@ -111,7 +111,7 @@
 			ga('send', 'pageview');
 		</script>
 		
-		<script src="js/three.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
 		<script src="js/stats.js"></script>
 		<script src="js/OrbitControls.js"></script>
 		<script src="js/Detector.js"></script>
@@ -119,7 +119,10 @@
 		<script src="js/KeyboardState.js"></script>
 		<script src="js/Projector.js"></script>
 		<script src="js/THREEx.FullScreen.js"></script>
-		
+
+		<script src="https://cdn.rawgit.com/mrdoob/three.js/dev/examples/js/loaders/FBXLoader.js"></script>
+		<script src="https://cdn.rawgit.com/mrdoob/three.js/dev/examples/js/libs/inflate.min.js"></script>
+
 		<script src="js/Vector.js"></script>
 		<script src="js/Boid.js"></script>
 		
@@ -142,9 +145,10 @@
   			var sharkMaxSpeed = maxSpeed * 3;
   			var maxForce = 0.003;
   			var sharkMaxForce = maxForce * 3;
+
+  			var boidCount = 24, sharkCount =0 ;
   			
-  			var boidCount = 200, sharkCount = 2;
-  			
+				var mixers = [];
 		</script>
 		
 		<script>
@@ -157,6 +161,7 @@ var boidGeometry, boidMaterial, sharkGeometry, sharkMaterial;
 
 goahead = false;
 
+var clock = new THREE.Clock();
 init();
 render();
 
@@ -340,6 +345,7 @@ function loadBoids1(amount) {
 	loader2 = new THREE.JSONLoader();
 	
 	loader.load('models/shark.json', function (geometry) {
+		console.log(geometry);
 		THREE.GeometryUtils.center(geometry);
 		sharkGeometry = geometry;
 		sharkMaterial = new THREE.MeshLambertMaterial({color: 0x4444cc});
@@ -378,12 +384,27 @@ function loadBoids1(amount) {
 }
 
 function loadBoids2() {
+
+
 	loader2.load('models/vector.json', function (geometry) {
+
 		THREE.GeometryUtils.center(geometry);
 		boidGeometry = geometry;
-		boidMaterial = new THREE.MeshLambertMaterial({color: 0xcc4444});
-		
+		boidMaterial = new THREE.MeshLambertMaterial({color: 0xffffcc});
+
 		for(var i = 0; i != boidCount; i++) {
+
+			var loader3 = new THREE.FBXLoader();
+			loader3.load('Flying.fbx', function (object) {
+
+
+				object.mixer = new THREE.AnimationMixer( object );
+				mixers.push( object.mixer );
+
+		object.scale.set( 0.1, 0.1, 0.1)
+				var action = object.mixer.clipAction( object.animations[ 0 ] );
+				action.play();
+
 			var posx = Math.random() * 300 - 150;
 			var posy = Math.random() * 300 - 150;
 			var posz = Math.random() * 300 - 150;
@@ -400,7 +421,7 @@ function loadBoids2() {
 							     
 
 			var	boid = new Boid(pos, rot, vel, false);
-			var	mesh = new THREE.Mesh(geometry, boidMaterial);
+			var	mesh = new THREE.Mesh(boidGeometry, boidMaterial);
 			
 			mesh.position.x = pos.x;
 			mesh.position.y = pos.y;
@@ -410,11 +431,31 @@ function loadBoids2() {
 			mesh.rotation.y = rot.y;
 			mesh.rotation.z = rot.z;
 
-			boids.push(boid);
-			bgroup.add(mesh);
+				object.position.x = pos.x;
+				object.position.y = pos.y;
+				object.position.z = pos.z;
+				
+				object.rotation.x = rot.x;
+				object.rotation.y = rot.y;
+				object.rotation.z = rot.z;
+
+				let char = object;
+
+				console.log("mexxsh");
+				boids.push(boid);
+				bgroup.add(char);
+				console.log(bgroup);
+
+			});
+
+
+			// boids.push(boid);
+			// bgroup.add(mesh);
 		}
-		goahead = true;
-		loadBoids3();
+
+			goahead = true;
+			loadBoids3();
+
 	});
 }
 
@@ -510,6 +551,15 @@ function render() {
 	if(goahead) {
 		boidsUpdate();
 		
+		if ( mixers.length > 0 ) {
+
+			for ( var i = 0; i < mixers.length; i ++ ) {
+
+				mixers[ i ].update( clock.getDelta() );
+
+			}
+
+		}
 		if(keyboard.pressed("space")) {
 			var center = new THREE.Vector3(0, 0, 0);
 			for(var i = 0; i != bgroup.children.length; i++) {
