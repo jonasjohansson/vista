@@ -1,3 +1,10 @@
+/*
+
+https://stemkoski.github.io/Three.js/Chase-Camera.html
+https://threejs.org/docs/#api/animation/AnimationMixer
+https://github.com/jeromeetienne/threex.md2character/blob/master/threex.md2charactercontrols.js
+*/
+
 var camera, scene, renderer;
 var clothGeometry;
 var object;
