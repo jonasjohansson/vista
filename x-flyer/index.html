@@ -1,0 +1,624 @@
+<html>
+	<head>
+		<title>Boids.js</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+			
+			#menu {
+				position: absolute;
+			 	top: 10px;
+			 	left: 5px;
+				width: 200px;
+			}
+			
+			.lab {
+				color: #ff1111;
+			}
+			
+			#menu2 {
+				position: absolute;
+				top: 10px;
+				left: 155px;
+				width: 200px;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<div id="menu" onmouseenter="disableOrbit()" onmouseleave="enableOrbit()">
+			<label class="lab">Separation Force</label>
+			<output for=SepForce id=sfout>1</output>
+			<br><input type=range min=0 max=300 value=100 id=SepForce>
+			
+			<br><label class="lab">Cohesion Force</label>
+			<output for=CohForce id=cfout>0.6</output>
+			<br><input type=range min=0 max=300 value=80 id=CohForce>  
+			
+			<br><label class="lab">Alignment Force</label>
+			<output for=AliForce id=afout>1.6</output>
+			<br><input type=range min=0 max=300 value=160 id=AliForce>
+			
+			
+			
+			<br><br><label class="lab">Centre Force</label>
+			<output for=CenForce id=tfout>0.1</output>
+			<br><input type=range min=0 max=100 value=35 id=CenForce>
+			
+			
+			
+			<br><br><label class="lab">Max Speed</label>
+			<output for=MaxSpeed id=speedout>0.5</output>
+			<br><input type=range min=0 max=200 value=50 id=MaxSpeed>
+			
+			<br><label class="lab">Acceleration</label>
+			<output for=Acceleration id=accelout>0.5</output>
+			<br><input type=range min=0 max=20 value=3 id=Acceleration>
+			
+		</div>
+		
+		<div id="menu2" onmouseenter="disableOrbit()" onmouseleave="enableOrbit()">
+			<label class="lab">Separation Distance</label>
+			<output for=SepDist id=sdout>1</output>
+			<br><input type=range min=0 max=100 value=10 id=SepDist>
+			
+			<br><label class="lab">Cohesion Distance</label>
+			<output for=CohDist id=cdout>0.6</output>
+			<br><input type=range min=0 max=100 value=25 id=CohDist>  
+			
+			<br><label class="lab">Alignment Distance</label>
+			<output for=AliDist id=adout>1.6</output>
+			<br><input type=range min=0 max=100 value=15 id=AliDist>
+			
+			
+			
+			<br><br><label class="lab">Boid Count</label>
+			<output for=BoidCount id=BoidCountLabel>200</output>
+			<br><input type=range min=0 max=1000 value=200 id=BoidCount onmouseup="boidMouseUp()">
+			
+			<br><label class="lab">Shark Count</label>
+			<output for=SharkCount id=SharkCountLabel>2</output>
+			<br><input type=range min=0 max=20 value=2 id=SharkCount onmouseup="sharkMouseUp()">
+			
+			
+			
+			<br><br><input onclick="changeShark()" type="checkbox" 
+						id=folShark>Follow a Shark</input>
+			<br><input onclick="changeBoid()"
+						type="checkbox" id=folBoid>Follow a Boid</input>
+		</div>
+		
+		<script type='text/javascript'>
+			var trackingShark = false;
+			var trackingBoid = false;
+			
+			function changeShark() { 
+	    		trackingShark = !trackingShark;
+			}	
+			
+			function changeBoid() { 
+    			trackingBoid = !trackingBoid;
+			}
+		</script>
+		
+		<script>
+			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+			
+			ga('create', 'UA-63376867-1', 'auto');
+			ga('send', 'pageview');
+		</script>
+		
+		<script src="js/three.min.js"></script>
+		<script src="js/stats.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/Detector.js"></script>
+		<script src="js/FirstPersonControls.js"></script>
+		<script src="js/KeyboardState.js"></script>
+		<script src="js/Projector.js"></script>
+		<script src="js/THREEx.FullScreen.js"></script>
+		
+		<script src="js/Vector.js"></script>
+		<script src="js/Boid.js"></script>
+		
+		<script type='text/javascript' > 
+  			var sepFac = 1; 
+  			var cohFac = 0.7;
+  			var aliFac = 1.6;
+  			var tarFac = 0.3;
+  			
+  			var sharkSepFac = 5;
+  			var sharkCohFac = 0.01;
+  			var sharkAliFac = 0.01;
+  			
+  			var sepDist = 10;
+  			var sharkSepDist = sepDist * 2;
+  			var cohDist = 25;
+  			var aliDist = 15;
+  			
+  			var maxSpeed = .5;
+  			var sharkMaxSpeed = maxSpeed * 3;
+  			var maxForce = 0.003;
+  			var sharkMaxForce = maxForce * 3;
+  			
+  			var boidCount = 200, sharkCount = 2;
+  			
+		</script>
+		
+		<script>
+
+var camera, controls, scene, renderer, loader, stats, clock;
+
+var boids, sharks, bgroup, sgroup, target, targetvel, goahead, keyboard;
+
+var boidGeometry, boidMaterial, sharkGeometry, sharkMaterial;
+
+goahead = false;
+
+init();
+render();
+
+function animate() {
+	requestAnimationFrame(animate);
+	render();
+}
+
+function boidMouseUp() {
+	boidCount = (document.querySelector('#BoidCount').value);
+	document.querySelector('#BoidCountLabel').value = boidCount;
+	
+	if(boidCount > boids.length) {
+		var count = boidCount - boids.length;
+		for(var i = 0; i != count; i++) {
+			addBoid();
+		}
+	} else if(boidCount < boids.length) {
+		var count = boids.length - boidCount;
+		for(var i = 0; i != count; i++) {
+			removeBoid();
+		}
+	}
+}
+
+function sharkMouseUp() {
+	sharkCount = (document.querySelector('#SharkCount').value);
+	document.querySelector('#SharkCountLabel').value = sharkCount;
+	
+	if(sharkCount > sharks.length) {
+		var count = sharkCount - sharks.length;
+		for(var i = 0; i != count; i++) {
+			addShark();
+		}
+	} else if(sharkCount < sharks.length) {
+		var count = sharks.length - sharkCount;
+		for(var i = 0; i != count; i++) {
+			removeShark();
+		}
+	}
+}
+
+function disableOrbit() {
+	controls.enabled = false;
+}
+
+function enableOrbit() {
+	controls.enabled = true;
+}
+
+function init() {
+	fixLayout();
+	
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	
+	trackingShark = false;
+	trackingBoid = false;
+	mouse = new THREE.Vector2();
+	
+	clock = new THREE.Clock();
+	
+	count = 0;
+	
+	camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.z = 100;
+
+	setupOrbitControls();
+
+	scene = new THREE.Scene();
+	scene.fog = new THREE.FogExp2(0xcccccc, 0.0027);
+
+	keyboard = new THREEx.KeyboardState();
+	
+	var light1 = new THREE.DirectionalLight(0xeeeeee);
+	light1.position.x = Math.random() - 0.5;
+	light1.position.y = Math.random() - 0.5;
+	light1.position.z = Math.random() - 0.5;
+	light1.position.normalize();
+	light1.intensity = 1.5;
+	scene.add(light1);
+	
+	var light2 = new THREE.DirectionalLight(0xeeeeee);
+	light2.position.x = Math.random() - 0.5;
+	light2.position.y = Math.random() - 0.5;
+	light2.position.z = Math.random() - 0.5;
+	light2.position.normalize();
+	light2.intensity = 1;
+	scene.add(light2);
+	
+	renderer = new THREE.WebGLRenderer();
+	renderer.setClearColor(scene.fog.color);
+	renderer.setPixelRatio(window.devicePixelRatio);
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+
+	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.right = '0px';
+	stats.domElement.style.bottom = '0px';
+	document.body.appendChild(stats.domElement);
+	
+	window.addEventListener('resize', onWindowResize, false);
+	
+	target = new Vector(0, 0, 0);
+	loadBoids1();
+	
+	addContext();
+
+	animate();
+}
+
+function fixLayout() {
+	var div = document.getElementById('menu2');
+	var slider = document.getElementById('SepForce');
+	var width = slider.offsetWidth + 20;
+	div.style.left = '' + width + 'px';
+}
+
+function setupOrbitControls() {
+	controls = new THREE.OrbitControls(camera);
+	controls.damping = 0.2;
+    controls.addEventListener('change', render);
+}
+
+function setupFirstPersonControls() {
+	controls = new THREE.FirstPersonControls(camera);
+    controls.lookSpeed = 0.3;
+    controls.movementSpeed = 50;
+    controls.noFly = true;
+    controls.lookVertical = true;
+    controls.constrainVertical = true;
+    controls.verticalMin = .1;
+    controls.verticalMax = 5;
+    controls.lon = -150;
+    controls.lat = 120;
+}
+
+function addContext() {
+	var cubeGeometry = new THREE.SphereGeometry(500, 16, 16);
+	var dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3 } );
+	
+	var cube = new THREE.Line(geo2line(cubeGeometry), dashMaterial, THREE.LinePieces);
+	cube.position.set(0, 0, 0);
+	scene.add(cube);
+}
+
+function geo2line( geo ) // credit to WestLangley!
+{
+    var geometry = new THREE.Geometry();
+    var vertices = geometry.vertices;
+	
+	for ( i = 0; i < geo.faces.length; i++ ) 
+	{
+        var face = geo.faces[ i ];
+        if ( face instanceof THREE.Face3 ) 
+		{
+            var a = geo.vertices[ face.a ].clone();
+			var b = geo.vertices[ face.b ].clone();
+			var c = geo.vertices[ face.c ].clone();
+            vertices.push( a,b, b,c, c,a );
+        } 
+		else if ( face instanceof THREE.Face4 ) 
+		{
+			var a = geo.vertices[ face.a ].clone();
+			var b = geo.vertices[ face.b ].clone();
+			var c = geo.vertices[ face.c ].clone();
+			var d = geo.vertices[ face.d ].clone();
+            vertices.push( a,b, b,c, c,d, d,a );
+        }
+    }
+    geometry.computeLineDistances();
+    return geometry;
+}
+
+function loadBoids1(amount) {
+	boids = [];
+	sharks = [];
+	bgroup = new THREE.Group();
+	sgroup = new THREE.Group();
+	loader = new THREE.JSONLoader();
+	loader2 = new THREE.JSONLoader();
+	
+	loader.load('models/shark.json', function (geometry) {
+		THREE.GeometryUtils.center(geometry);
+		sharkGeometry = geometry;
+		sharkMaterial = new THREE.MeshLambertMaterial({color: 0x4444cc});
+		
+		for(var i = 0; i != sharkCount; i++) {
+			var posx = Math.random() * 300 - 150;
+			var posy = Math.random() * 300 - 150;
+			var posz = Math.random() * 300 - 150;
+			
+			var rotx = 0;
+			var roty = 0;
+			var rotz = 0;
+			
+			var pos = new Vector(posx, posy, posz);
+			var rot = new Vector(rotx, roty, rotz);
+			var vel = new Vector(Math.random() * 10 - .5,
+							     Math.random() * 10 - .5,
+							     Math.random() * 10 - .5);
+							     
+			var boid = new Boid(pos, rot, vel, true);
+			var	mesh = new THREE.Mesh(sharkGeometry, sharkMaterial);
+
+			mesh.position.x = pos.x;
+			mesh.position.y = pos.y;
+			mesh.position.z = pos.z;
+			
+			mesh.rotation.x = rot.x;
+			mesh.rotation.y = rot.y;
+			mesh.rotation.z = rot.z;
+
+			sharks.push(boid);
+			sgroup.add(mesh);
+		}
+		loadBoids2();
+	});
+}
+
+function loadBoids2() {
+	loader2.load('models/vector.json', function (geometry) {
+		THREE.GeometryUtils.center(geometry);
+		boidGeometry = geometry;
+		boidMaterial = new THREE.MeshLambertMaterial({color: 0xcc4444});
+		
+		for(var i = 0; i != boidCount; i++) {
+			var posx = Math.random() * 300 - 150;
+			var posy = Math.random() * 300 - 150;
+			var posz = Math.random() * 300 - 150;
+			
+			var rotx = 0;
+			var roty = 0;
+			var rotz = 0;
+			
+			var pos = new Vector(posx, posy, posz);
+			var rot = new Vector(rotx, roty, rotz);
+			var vel = new Vector(Math.random() * 10 - .5,
+							     Math.random() * 10 - .5,
+							     Math.random() * 10 - .5);
+							     
+
+			var	boid = new Boid(pos, rot, vel, false);
+			var	mesh = new THREE.Mesh(geometry, boidMaterial);
+			
+			mesh.position.x = pos.x;
+			mesh.position.y = pos.y;
+			mesh.position.z = pos.z;
+			
+			mesh.rotation.x = rot.x;
+			mesh.rotation.y = rot.y;
+			mesh.rotation.z = rot.z;
+
+			boids.push(boid);
+			bgroup.add(mesh);
+		}
+		goahead = true;
+		loadBoids3();
+	});
+}
+
+function loadBoids3() {
+	scene.add(sgroup);
+	scene.add(bgroup);
+}
+
+function addBoid() {
+	var mesh = new THREE.Mesh(boidGeometry, boidMaterial);
+	var posx = Math.random() * 100 - 50;
+	var posy = Math.random() * 100 - 50;
+	var posz = Math.random() * 100 - 50;
+	
+	var rotx = 0;
+	var roty = 0;
+	var rotz = 0;
+	
+	var pos = new Vector(posx, posy, posz);
+	var rot = new Vector(rotx, roty, rotz);
+	var vel = new Vector(Math.random() * 10 - .5,
+					     Math.random() * 10 - .5,
+					     Math.random() * 10 - .5);
+	
+	mesh.position.x = pos.x;
+	mesh.position.y = pos.y;
+	mesh.position.z = pos.z;
+	
+	mesh.rotation.x = rot.x;
+	mesh.rotation.y = rot.y;
+	mesh.rotation.z = rot.z;
+	
+	var boid = new Boid(pos, rot, vel);
+	
+	boids.push(boid);
+	bgroup.add(mesh);
+}
+
+function addShark() {
+	var mesh = new THREE.Mesh(sharkGeometry, sharkMaterial);
+	var posx = Math.random() * 100 - 50;
+	var posy = Math.random() * 100 - 50;
+	var posz = Math.random() * 100 - 50;
+	
+	var rotx = 0;
+	var roty = 0;
+	var rotz = 0;
+	
+	var pos = new Vector(posx, posy, posz);
+	var rot = new Vector(rotx, roty, rotz);
+	var vel = new Vector(Math.random() * 10 - .5,
+					     Math.random() * 10 - .5,
+					     Math.random() * 10 - .5);
+	
+	mesh.position.x = pos.x;
+	mesh.position.y = pos.y;
+	mesh.position.z = pos.z;
+	
+	mesh.rotation.x = rot.x;
+	mesh.rotation.y = rot.y;
+	mesh.rotation.z = rot.z;
+	
+	var boid = new Boid(pos, rot, vel);
+	
+	sharks.push(boid);
+	sgroup.add(mesh);
+}
+
+function removeShark() {
+	sharks.pop();
+	sgroup.children.pop();
+}
+
+function removeBoid() {
+	boids.pop();
+	bgroup.children.pop();
+}
+
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function render() {
+	var delta = clock.getDelta();
+	
+	renderer.render(scene, camera);
+	stats.update();
+
+	buttonUpdate();
+
+	if(goahead) {
+		boidsUpdate();
+		
+		if(keyboard.pressed("space")) {
+			var center = new THREE.Vector3(0, 0, 0);
+			for(var i = 0; i != bgroup.children.length; i++) {
+				center.add(bgroup.children[i].position);
+			}
+			center.divideScalar(bgroup.children.length);
+			camera.lookAt(center);
+		    controls.target = center;
+		}
+	}
+	
+	if(trackingShark) {
+		var relativeCameraOffset = new THREE.Vector3(0, -20, 0);
+		var cameraOffset = relativeCameraOffset.applyMatrix4(sgroup.children[0].matrixWorld);
+		camera.position.x = cameraOffset.x;
+		camera.position.y = cameraOffset.y;
+		camera.position.z = cameraOffset.z;
+		camera.lookAt(sgroup.children[0].position);
+	}
+	
+	if(trackingBoid) {
+		var relativeCameraOffset = new THREE.Vector3(0, -20, 0);
+		var cameraOffset = relativeCameraOffset.applyMatrix4(bgroup.children[0].matrixWorld);
+		camera.position.x = cameraOffset.x;
+		camera.position.y = cameraOffset.y;
+		camera.position.z = cameraOffset.z;
+		camera.lookAt(bgroup.children[0].position);
+	}
+	
+	
+}
+
+function buttonUpdate() {
+	sepFac = (document.querySelector('#SepForce').value) / 100;
+	if(sepFac == 0) sepFac = 0.01;
+	document.querySelector('#sfout').value = sepFac;
+	sharkSepFac = sepFac * 5;
+	
+	cohFac = (document.querySelector('#CohForce').value) / 100;
+	if(cohFac == 0) cohFac = 0.01;
+	document.querySelector('#cfout').value = cohFac;
+	
+	aliFac = (document.querySelector('#AliForce').value) / 100;
+	if(aliFac == 0) aliFac = 0.01;
+	document.querySelector('#afout').value = aliFac;
+	
+	tarFac = (document.querySelector('#CenForce').value) / 100;
+	if(tarFac == 0) tarFac = 0.001;
+	document.querySelector('#tfout').value = tarFac;
+
+
+	
+	sepDist = (document.querySelector('#SepDist').value) / 1;
+	if(sepFac == 0) SepDist = 0.1;
+	document.querySelector('#sdout').value = sepDist;
+	sharkSepDist = sepDist * 2;
+	
+	cohDist = (document.querySelector('#CohDist').value) / 1;
+	if(cohFac == 0) cohDist = 0.1;
+	document.querySelector('#cdout').value = cohDist;
+	
+	aliDist = (document.querySelector('#AliDist').value) / 1;
+	if(aliDist== 0) aliDist = 0.1;
+	document.querySelector('#adout').value = aliDist;
+	
+	
+	
+	maxSpeed = (document.querySelector('#MaxSpeed').value) / 100;
+	if(maxSpeed == 0) maxSpeed = 0.01;
+	sharkMaxSpeed = maxSpeed * 3;
+	document.querySelector('#speedout').value = maxSpeed;
+	
+	maxForce = (document.querySelector('#Acceleration').value) / 1000;
+	if(maxForce == 0) maxForce = 0.001;
+	sharkMaxForce = maxForce * 3;
+	document.querySelector('#accelout').value = maxForce;
+}
+
+function boidsUpdate() {	
+	for(var i = 0; i != boidCount; i++) {
+		if(i < boids.length) {
+			boids[i].update(boids, target, sharks);
+			
+			bgroup.children[i].position.x = boids[i].pos.x;
+			bgroup.children[i].position.y = boids[i].pos.y;
+			bgroup.children[i].position.z = boids[i].pos.z;
+			
+			bgroup.children[i].rotation.x = boids[i].rot.x;
+			bgroup.children[i].rotation.y = boids[i].rot.y;
+			bgroup.children[i].rotation.z = boids[i].rot.z;
+		}
+	}
+	
+	for(var i = 0; i != sharkCount; i++) {
+		if(i < sharks.length) {
+			sharks[i].update(boids, target, sharks);
+			
+			sgroup.children[i].position.x = sharks[i].pos.x;
+			sgroup.children[i].position.y = sharks[i].pos.y;
+			sgroup.children[i].position.z = sharks[i].pos.z;
+			
+			sgroup.children[i].rotation.x = sharks[i].rot.x;
+			sgroup.children[i].rotation.y = sharks[i].rot.y;
+			sgroup.children[i].rotation.z = sharks[i].rot.z;
+		}
+	}
+}
+		</script>
+		
+	</body>
+	</head>
+</html>
