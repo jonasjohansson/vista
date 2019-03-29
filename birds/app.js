@@ -2,9 +2,10 @@ const WIDTH = 32;
 const BIRDS = WIDTH * WIDTH;
 const WINGSPAN = 10;
 const SCALE = 0.1;
+const DIST = 740;
 
-var windowHalfX = window.innerWidth / 2;
-var windowHalfY = window.innerHeight / 2;
+const WINDOW_HALF_X = window.innerWidth / 2;
+const WINDOW_HALF_Y = window.innerHeight / 2;
 
 var BOUNDS = 2560,
 	BOUNDS_HALF = BOUNDS / 2;
@@ -16,7 +17,8 @@ var velocityVariable;
 var positionVariable;
 var positionUniforms;
 var velocityUniforms;
-var birdUniforms;var container, stats;
+var birdUniforms;
+var container, stats;
 
 var camera, controls, scene, renderer;
 
@@ -38,41 +40,22 @@ window.onload = () => {
 
 	document.body.appendChild(renderer.domElement);
 
-	camera = new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,10000);
+	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 10000);
 
 	initComputeRenderer();
 
-	// var gui = new dat.GUI();
-
-	var effectController = {
-		separation: 20.0,
-		alignment: 30.0,
-		cohesion: 30.0,
-		freedom: 10.75
-	};
-
-	var valuesChanger = function() {
-		velocityUniforms['separationDistance'].value = effectController.separation;
-		velocityUniforms['alignmentDistance'].value = effectController.alignment;
-		velocityUniforms['cohesionDistance'].value = effectController.cohesion;
-		velocityUniforms['freedomFactor'].value = effectController.freedom;
-	};
-
-	valuesChanger();
-
-	// gui.add(effectController, 'separation', 0.0, 100.0, 1.0).onChange(valuesChanger);
-	// gui.add(effectController, 'alignment', 0.0, 100, 0.001).onChange(valuesChanger);
-	// gui.add(effectController, 'cohesion', 0.0, 100, 0.025).onChange(valuesChanger);
-	// gui.close();
+	velocityUniforms['separationDistance'].value = 20.0;
+	velocityUniforms['alignmentDistance'].value = 30.0;
+	velocityUniforms['cohesionDistance'].value = 30.0;
+	velocityUniforms['freedomFactor'].value = 10.75;
 
 	addEnvironment();
 	addTerrain();
 	initBirds();
 	animate();
-}
+};
 
-function addEnvironment(){
-
+function addEnvironment() {
 	sunMaterial = new THREE.MeshLambertMaterial({
 		color: 0xffffff,
 		side: THREE.DoubleSide,
@@ -81,7 +64,7 @@ function addEnvironment(){
 	});
 
 	sun = new THREE.Mesh(new THREE.SphereGeometry(20, 20, 20), sunMaterial);
-	sun.add(new THREE.PointLight(0xff5300, 30, 1100));
+	sun.add(new THREE.PointLight(0xffff50, 1, 720));
 	scene.add(sun);
 
 	worldMaterial = new THREE.MeshPhongMaterial({
@@ -91,11 +74,10 @@ function addEnvironment(){
 
 	world = new THREE.Mesh(new THREE.SphereGeometry(1000, 50, 50), worldMaterial);
 	scene.add(world);
-
 }
-function addTerrain() {
-    var data = generateHeight(worldWidth, worldDepth);
 
+function addTerrain() {
+	var data = generateHeight(worldWidth, worldDepth);
 
 	var geometry = new THREE.PlaneBufferGeometry(7500, 7500, worldWidth - 1, worldDepth - 1);
 	geometry.rotateX(-Math.PI / 2);
@@ -110,21 +92,24 @@ function addTerrain() {
 	texture.wrapS = THREE.ClampToEdgeWrapping;
 	texture.wrapT = THREE.ClampToEdgeWrapping;
 
-	mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
-		map: texture,
-		wireframe: false,
-		reflectivity:0.6,
-		color:0x550000,
-		// envMap:textureCube,
-		// combine:THREE.MixOperation,
-		opacity:0.5,
-		transparent:true,
-		specular:0xff5300,
+	mesh = new THREE.Mesh(
+		geometry,
+		new THREE.MeshBasicMaterial({
+			map: texture,
+			wireframe: false,
+			reflectivity: 0.6,
+			color: 0x0055ff,
+			// envMap:textureCube,
+			// combine:THREE.MixOperation,
+			opacity: 0.5,
+			transparent: true,
+			// specular: 0xff5300,
 			side: THREE.DoubleSide
-		}));
+		})
+	);
 
 	mesh.scale.y = -1;
-	
+
 	scene.add(mesh);
 }
 
@@ -139,13 +124,12 @@ function render() {
 
 	if (delta > 1) delta = 1; // safety cap on large deltas
 	last = now;
-	const distance = 740;
 
-	let angle = new Date().getTime() * 0.0001;
-	sun.position.set(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
+	let angle = new Date().getTime() * 0.00005;
+	sun.position.set(Math.cos(angle) * DIST, 300, Math.sin(angle) * DIST);
 
-	velocityUniforms['separationDistance'].value = Math.sin(angle) * 50 + 50;
-
+	velocityUniforms['separationDistance'].value = Math.sin(angle) * 50 + 20;
+	velocityUniforms['cohesionDistance'].value = Math.sin(angle) * 30;
 	positionUniforms['time'].value = now;
 	positionUniforms['delta'].value = delta;
 	velocityUniforms['time'].value = now;
@@ -153,12 +137,14 @@ function render() {
 	birdUniforms['time'].value = now;
 	birdUniforms['delta'].value = delta;
 
-	velocityUniforms['predator'].value.set((0.5 * 10000) / windowHalfX, (-0.5 * 10000) / windowHalfY, 0);
+	var px = (0.5 * 10000) / WINDOW_HALF_X;
+	var py = (-0.5 * 10000) / WINDOW_HALF_Y;
+	velocityUniforms['predator'].value.set(px, py, 0);
 
 	gpuCompute.compute();
 
 	birdUniforms['texturePosition'].value = gpuCompute.getCurrentRenderTarget(positionVariable).texture;
 	birdUniforms['textureVelocity'].value = gpuCompute.getCurrentRenderTarget(velocityVariable).texture;
 
-	renderer.render(scene,camera);
+	renderer.render(scene, camera);
 }
