@@ -271,8 +271,9 @@
 		<script src="terrain.js"></script>
 		<script src="app.js"></script>
 		<a-scene embedded arjs>
-			<a-entity birds></a-entity>
-			<a-entity camera></a-entity>
+			<a-marker-camera preset="hiro">
+				<a-entity birds></a-entity>
+			</a-marker-camera>
 		</a-scene>
 	</body>
 </html>
