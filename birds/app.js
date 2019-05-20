@@ -54,6 +54,10 @@ window.onload = () => {
 	initBirds();
 	toggleAudio();
 	animate();
+
+	setTimeout(function() {
+		location.reload();
+	}, 300000);
 };
 
 function addEnvironment() {
