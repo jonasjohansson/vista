@@ -47,7 +47,7 @@ window.onload = () => {
 	velocityUniforms['separationDistance'].value = 20.0;
 	velocityUniforms['alignmentDistance'].value = 20.0;
 	velocityUniforms['cohesionDistance'].value = 20.0;
-	velocityUniforms['freedomFactor'].value = 5.75;
+	velocityUniforms['freedomFactor'].value = 0.75;
 
 	addEnvironment();
 	addTerrain();
@@ -142,13 +142,13 @@ function render() {
 	if (delta > 1) delta = 1; // safety cap on large deltas
 	last = now;
 
-	let angle = new Date().getTime() * 0.000005;
+	let angle = new Date().getTime() * 0.00005;
 	sun.position.set(Math.cos(angle) * DIST, 300, Math.sin(angle) * DIST);
-	mesh.position.set(Math.sin(angle) * -360, 0, 0);
+	mesh.position.set(Math.sin(angle * 0.1) * -360, 0, 0);
 
-	velocityUniforms['separationDistance'].value = Math.sin(angle) * 40;
-	velocityUniforms['cohesionDistance'].value = Math.cos(angle) * 20;
-	velocityUniforms['freedomFactor'].value = Math.sin(angle) * 10;
+	// velocityUniforms['separationDistance'].value = Math.sin(angle) * 50;
+	// velocityUniforms['cohesionDistance'].value = Math.cos(angle) * 20;
+	// velocityUniforms['freedomFactor'].value = Math.sin(angle) * 10;
 	positionUniforms['time'].value = now;
 	positionUniforms['delta'].value = delta;
 	velocityUniforms['time'].value = now;
