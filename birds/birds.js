@@ -28,7 +28,7 @@ THREE.BirdGeometry = function() {
         // Body
         // verts_push(0, -0, -20, 0, 4, -20, 0, 0, 30);
         // Left Wing
-        verts_push(0, 0, -15, -WINGSPAN, 0, 0, 0, 0, 15);
+        // verts_push(0, 0, -15, -WINGSPAN, 0, 0, 0, 0, 15);
         // Right Wing
         verts_push(0, 0, 15, WINGSPAN, 0, 0, 0, 0, -15);
     }
