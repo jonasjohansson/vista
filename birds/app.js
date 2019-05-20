@@ -45,13 +45,14 @@ window.onload = () => {
 	initComputeRenderer();
 
 	velocityUniforms['separationDistance'].value = 20.0;
-	velocityUniforms['alignmentDistance'].value = 30.0;
-	velocityUniforms['cohesionDistance'].value = 30.0;
-	velocityUniforms['freedomFactor'].value = 10.75;
+	velocityUniforms['alignmentDistance'].value = 20.0;
+	velocityUniforms['cohesionDistance'].value = 20.0;
+	velocityUniforms['freedomFactor'].value = 0.75;
 
 	addEnvironment();
 	addTerrain();
 	initBirds();
+	toggleAudio();
 	animate();
 };
 
@@ -113,6 +114,18 @@ function addTerrain() {
 	scene.add(mesh);
 }
 
+function toggleAudio() {
+	var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+	var iframeAudio = document.querySelector('#iframeAudio');
+	var playAudio = document.querySelector('#playAudio');
+
+	if (!isChrome) {
+		iframeAudio.parentNode.removeChild(iframeAudio);
+	} else {
+		playAudio.parentNode.removeChild(playAudio);
+	}
+}
+
 function animate() {
 	requestAnimationFrame(animate);
 	render();
@@ -128,8 +141,8 @@ function render() {
 	let angle = new Date().getTime() * 0.00005;
 	sun.position.set(Math.cos(angle) * DIST, 300, Math.sin(angle) * DIST);
 
-	velocityUniforms['separationDistance'].value = Math.sin(angle) * 50 + 20;
-	velocityUniforms['cohesionDistance'].value = Math.sin(angle) * 30;
+	velocityUniforms['separationDistance'].value = Math.sin(angle) * 40;
+	velocityUniforms['cohesionDistance'].value = Math.sin(angle) * 20;
 	positionUniforms['time'].value = now;
 	positionUniforms['delta'].value = delta;
 	velocityUniforms['time'].value = now;
