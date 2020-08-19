@@ -1,0 +1,129 @@
+<html>
+    <body style="margin: 0; overflow: hidden;">
+        <script type="module">
+            import * as THREE from 'https://threejs.org/build/three.module.js'
+            import { GUI } from 'https://threejs.org/examples/jsm/libs/dat.gui.module.js'
+            import { PLYLoader } from 'https://threejs.org/examples/jsm/loaders/PLYLoader.js'
+            import { FlyControls } from 'https://threejs.org/examples/jsm/controls/FlyControls.js'
+            import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js'
+            // import { GLTFLoader } from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js'
+            import { EffectComposer } from 'https://threejs.org/examples/jsm/postprocessing/EffectComposer.js'
+            import { RenderPass } from 'https://threejs.org/examples/jsm/postprocessing/RenderPass.js'
+            import { UnrealBloomPass } from 'https://threejs.org/examples/jsm/postprocessing/UnrealBloomPass.js'
+            var controls, pointLight, stats
+            var composer
+
+            var params = {
+                exposure: 1,
+                bloomStrength: 1.5,
+                bloomThreshold: 0,
+                bloomRadius: 0
+            }
+
+            let mesh
+
+            const scene = new THREE.Scene()
+            const clock = new THREE.Clock()
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000)
+
+            camera.position.set(0, 0, 400)
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true })
+            renderer.setSize(window.innerWidth, window.innerHeight)
+            document.body.appendChild(renderer.domElement)
+
+            controls = new OrbitControls(camera, renderer.domElement)
+            controls.maxPolarAngle = Math.PI * 0.5
+            controls.minDistance = 1
+            controls.maxDistance = 10
+
+            // scene.add(new THREE.AmbientLight(0x404040))
+
+            // pointLight = new THREE.PointLight(0xffffff, 1)
+            // camera.add(pointLight)
+
+            var renderScene = new RenderPass(scene, camera)
+
+            var bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                1.5,
+                0.4,
+                0.85
+            )
+            bloomPass.threshold = params.bloomThreshold
+            bloomPass.strength = params.bloomStrength
+            bloomPass.radius = params.bloomRadius
+
+            composer = new EffectComposer(renderer)
+            composer.addPass(renderScene)
+            composer.addPass(bloomPass)
+
+            new PLYLoader().load('sculpture.ply', function (geometry) {
+                let material = new THREE.PointsMaterial({
+                    vertexColors: THREE.VertexColors,
+                    size: 1,
+                    sizeAttenuation: false
+                })
+
+                mesh = new THREE.Points(geometry, material)
+                scene.add(mesh)
+
+                animate()
+            })
+
+            // new GLTFLoader().load('PrimaryIonDrive.glb', function (gltf) {
+            //     var model = gltf.scene
+
+            //     scene.add(model)
+
+            //     mixer = new THREE.AnimationMixer(model)
+            //     var clip = gltf.animations[0]
+            //     mixer.clipAction(clip.optimize()).play()
+
+            //     animate()
+            // })
+
+            var gui = new GUI()
+
+            gui.add(params, 'exposure', 0.1, 2).onChange(function (value) {
+                renderer.toneMappingExposure = Math.pow(value, 4.0)
+            })
+
+            gui.add(params, 'bloomThreshold', 0.0, 1.0).onChange(function (value) {
+                bloomPass.threshold = Number(value)
+            })
+
+            gui.add(params, 'bloomStrength', 0.0, 3.0).onChange(function (value) {
+                bloomPass.strength = Number(value)
+            })
+
+            gui.add(params, 'bloomRadius', 0.0, 1.0)
+                .step(0.01)
+                .onChange(function (value) {
+                    bloomPass.radius = Number(value)
+                })
+
+            window.onresize = function () {
+                var width = window.innerWidth
+                var height = window.innerHeight
+
+                camera.aspect = width / height
+                camera.updateProjectionMatrix()
+
+                renderer.setSize(width, height)
+                composer.setSize(width, height)
+            }
+
+            function animate() {
+                requestAnimationFrame(animate)
+
+                const delta = clock.getDelta()
+
+                // mixer.update(delta)
+
+                renderer.render(scene, camera)
+                composer.render()
+            }
+        </script>
+    </body>
+</html>
