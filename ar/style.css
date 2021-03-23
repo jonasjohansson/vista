@@ -1,0 +1,30 @@
+
+
+body {
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    margin:0;
+    overflow:hidden;
+}
+
+div {
+    display: inline-block;
+    width:100%;
+}
+
+img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position: center center;
+}
+
+div a {
+    text-align: center;
+}
+
+.prompt {
+    display:inline-block;
+    background-color: white;
+    color: black;
+}
