@@ -1,30 +1,91 @@
-
-
-body {
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    margin:0;
-    overflow:hidden;
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
 }
 
-div {
-    display: inline-block;
-    width:100%;
+body {
+	overflow: hidden;
+	filter: saturate(1.1);
+	font-size: 1.2rem;
+	line-height: 1;
+	text-align: center;
+	color: white;
+	text-transform: uppercase;
+}
+
+a {
+	display: inline-block;
+	text-align: center;
+	position: relative;
 }
 
 img {
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    object-position: center center;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center center;
 }
 
-div a {
-    text-align: center;
+/* intro */
+
+p.intro {
+	width: 100%;
+	line-height: 3vh;
+	height: 3vh;
+	z-index: 1;
+	background-color: black;
 }
+
+/* prompt */
 
 .prompt {
-    display:inline-block;
-    background-color: white;
-    color: black;
+	position: absolute;
+	display: inline-block;
+	width: 25%;
+	top: 50%;
+	left: 50%;
+	transform: translateY(-50%);
+	margin: 0 auto;
+	margin-left: -12.5%;
+	padding: 1rem;
+	border-radius: 4px;
+	text-transform: uppercase;
+	color: white;
+	font-size: 2rem;
+}
+
+.hide .prompt {
+	background-color: #120f19;
+	/* color: #f3b9a9; */
+}
+
+.skrea .prompt {
+	background-color: #20164f;
+	/* color: #fc9b97; */
+}
+
+.unna .prompt {
+	background-color: #0b1e1f;
+	/* color: #e1a16f; */
+}
+
+/* queries */
+
+@media only screen and (min-width: 896px) {
+	main {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+	}
+	a {
+		width: 33.33vw;
+		height: 97vh;
+	}
+}
+
+@media only screen and (max-width: 896px) {
+	a {
+		height: 32.33vh;
+		width: 100vw;
+	}
 }
