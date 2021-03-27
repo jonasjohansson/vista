@@ -12,6 +12,14 @@ body {
 	text-align: center;
 	color: white;
 	text-transform: uppercase;
+	opacity: 1;
+	will-change: opacity;
+	transition: opacity 500ms ease-in-out;
+	background-color: black;
+}
+
+body.loading {
+	opacity: 0;
 }
 
 a {
