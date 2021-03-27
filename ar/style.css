@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap');
+
 * {
 	margin: 0;
 	padding: 0;
@@ -7,15 +9,14 @@
 body {
 	overflow: hidden;
 	filter: saturate(1.1);
-	font-size: 1.2rem;
-	line-height: 1;
+	font: 1.2rem/1 'Chakra Petch', sans-serif;
 	text-align: center;
-	color: white;
 	text-transform: uppercase;
 	opacity: 1;
 	will-change: opacity;
 	transition: opacity 500ms ease-in-out;
 	background-color: black;
+	color: white;
 }
 
 body.loading {
@@ -38,11 +39,14 @@ img {
 /* intro */
 
 p.intro {
+	position: fixed;
+	top: 0;
 	width: 100%;
 	line-height: 3vh;
 	height: 3vh;
 	z-index: 1;
-	background-color: black;
+	background-color: rgba(0, 0, 0, 0.8);
+	display: none;
 }
 
 /* prompt */
@@ -50,17 +54,18 @@ p.intro {
 .prompt {
 	position: absolute;
 	display: inline-block;
-	width: 25%;
+	width: 30%;
 	top: 50%;
 	left: 50%;
 	transform: translateY(-50%);
 	margin: 0 auto;
-	margin-left: -12.5%;
+	margin-left: -15%;
 	padding: 1rem;
 	border-radius: 4px;
 	text-transform: uppercase;
 	color: white;
-	font-size: 2rem;
+	background-color: rgba(0, 0, 0, 0.8);
+	font-size: max(1.4rem, min(2vw, 30px));
 }
 
 .hide .prompt {
@@ -87,7 +92,7 @@ p.intro {
 	}
 	a {
 		width: 33.33vw;
-		height: 97vh;
+		height: 100vh;
 	}
 }
 
