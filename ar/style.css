@@ -6,9 +6,15 @@
 	border: 0;
 }
 
-body {
-	overflow: hidden;
+html {
 	filter: saturate(1.1);
+}
+
+body {
+	position: absolute;
+	overflow: hidden;
+	height: 100vh;
+	width: 100vw;
 	font: 1.2rem/1 'Chakra Petch', sans-serif;
 	text-align: center;
 	text-transform: uppercase;
@@ -51,21 +57,25 @@ p.intro {
 
 /* prompt */
 
-.prompt {
+.prompt-wrap {
 	position: absolute;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+}
+
+.prompt {
 	display: inline-block;
-	width: 30%;
+	position: relative;
 	top: 50%;
-	left: 50%;
 	transform: translateY(-50%);
 	margin: 0 auto;
-	margin-left: -15%;
 	padding: 1rem;
 	border-radius: 4px;
+	background-color: rgba(0, 0, 0, 0.8);
+	font-size: max(1.2rem, min(4vw, 30px));
 	text-transform: uppercase;
 	color: white;
-	background-color: rgba(0, 0, 0, 0.8);
-	font-size: max(1.4rem, min(2vw, 30px));
 }
 
 .hide .prompt {
@@ -98,7 +108,7 @@ p.intro {
 
 @media only screen and (max-width: 896px) {
 	a {
-		height: 32.33vh;
+		height: 33.33vh;
 		width: 100vw;
 	}
 }
