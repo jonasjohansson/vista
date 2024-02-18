@@ -1,6 +1,6 @@
 var clock = new THREE.Clock();
 var mouse = { x: 0, y: 0 };
-var water, waterGeometry;
+var water, waterGeometry, sun;
 var audioContext, panner;
 
 window.addEventListener('load', function() {
@@ -28,7 +28,7 @@ function addEnvironment() {
         transparent: true
     });
     var sunGeometry = new THREE.SphereGeometry(20, 20, 20);
-    var sun = new THREE.Mesh(sunGeometry, sunMaterial);
+    sun = new THREE.Mesh(sunGeometry, sunMaterial);
     scene.add(sun);
 
     var sunLight = new THREE.PointLight(0xff5300, 40, 2500);
