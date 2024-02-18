@@ -11,6 +11,7 @@ const WORLD_RADIUS = 1000;
 
 let scene, camera, renderer, sun, sunLight, world, water, sunMaterial, sunGeometry, worldMaterial, worldGeometry, waterMaterial, waterGeometry;
 let audioContext, panner;
+const clock = new THREE.Clock();
 
 document.addEventListener('DOMContentLoaded', function () {
   initScene();
